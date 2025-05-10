@@ -1,0 +1,103 @@
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code
+.vscode/
+.history/
+*.code-workspace
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+*.sw?
+.#*
+*#
+*~
+*.sublime-*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# TypeScript
+*.tsbuildinfo
+
+# Build
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Spring Boot
+**/application-dev.properties
+**/application-prod.properties
+**/application-local.properties
+**/src/main/resources/application-dev.yml
+**/src/main/resources/application-prod.yml
+**/src/main/resources/application-local.yml
+
+# Cache files
+.sass-cache/
+.eslintcache
+.stylelintcache
+.temp/
+.cache/
+
+# Certificates
+*.pem
+*.key
+*.crt
+
+# IDE specific files
+.factorypath
+.apt_generated/
+
+# Compiled output
+*.class
+
+# MinIO
+minio-data/
+
+# Editor directories and files
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln 
