@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.MemberRegisterMapper">
+
+    <!-- 基本映射 -->
+    <resultMap id="BaseResultMap" type="com.zhtj.model.twosystem.MemberRegister">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="organization_id" property="organizationId"/>
+        <result column="organization_name" property="organizationName"/>
+        <result column="register_year" property="registerYear"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="register_time" property="registerTime"/>
+        <result column="approval_time" property="approvalTime"/>
+        <result column="approver_id" property="approverId"/>
+        <result column="approver_name" property="approverName"/>
+        <result column="approval_comment" property="approvalComment"/>
+        <result column="register_deadline" property="registerDeadline"/>
+        <result column="is_reminder_sent" property="isReminderSent"/>
+        <result column="reminder_time" property="reminderTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <!-- 非数据库字段映射 -->
+        <result column="batchId" property="batchId"/>
+        <result column="batchCode" property="batchCode"/>
+        <result column="title" property="title"/>
+        <result column="memberName" property="memberName"/>
+        <result column="memberCode" property="memberCode"/>
+        <result column="branchId" property="branchId"/>
+        <result column="committeeId" property="committeeId"/>
+    </resultMap>
+
+    <!-- 获取用户在指定批次中的注册状态 -->
+    <select id="getRegisterStatus" resultMap="BaseResultMap">
+        SELECT r.id, r.user_id, r.user_name, r.organization_id, r.organization_name, 
+               r.register_year, r.status as status, r.remark, r.register_time, r.approval_time, 
+               r.approver_id, r.approver_name, r.approval_comment, r.register_deadline, 
+               r.is_reminder_sent, r.reminder_time, r.create_time, r.update_time, r.batch_id,
+               b.batch_name as batchCode, b.batch_name as title, b.register_year as batch_year, 
+               u.name as memberName, u.league_number as memberCode, o.name as organizationName, 
+               r.organization_id as branchId 
+        FROM member_register r 
+        JOIN member_register_batch b ON r.batch_id = b.id
+        LEFT JOIN user u ON r.user_id = u.id 
+        LEFT JOIN organization o ON r.organization_id = o.id 
+        WHERE r.user_id = #{userId} AND r.batch_id = #{batchId} 
+        LIMIT 1
+    </select>
+    
+    <!-- 获取用户的注册历史 -->
+    <select id="getRegisterHistory" resultMap="BaseResultMap">
+        SELECT r.id, r.user_id, r.user_name, r.organization_id, r.organization_name, 
+               r.register_year, r.status, r.remark, r.register_time, r.approval_time, 
+               r.approver_id, r.approver_name, r.approval_comment, r.register_deadline, 
+               r.is_reminder_sent, r.reminder_time, r.create_time, r.update_time, r.batch_id,
+               b.batch_name as batchCode, b.batch_name as title
+        FROM member_register r 
+        LEFT JOIN member_register_batch b ON r.batch_id = b.id
+        WHERE r.user_id = #{userId} 
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <!-- 获取待审批的注册申请列表 -->
+    <select id="getApprovalList" resultMap="BaseResultMap">
+        SELECT 
+            r.*, 
+            b.batch_name as batchCode, 
+            b.batch_name as title, 
+            b.register_year as batch_year,
+            u.name as memberName, 
+            u.league_number as memberCode, 
+            o.name as organizationName,
+            r.organization_id as branchId, 
+            (SELECT parent_id FROM organization WHERE id = r.organization_id) as committeeId 
+        FROM 
+            member_register r
+        JOIN 
+            member_register_batch b ON r.batch_id = b.id
+        LEFT JOIN 
+            user u ON r.user_id = u.id 
+        LEFT JOIN 
+            organization o ON r.organization_id = o.id 
+        <where>
+            1=1
+            <if test="batchId != null">
+                AND r.batch_id = #{batchId}
+            </if> 
+            <choose>
+                <when test="organizationIds != null and organizationIds.size() > 0">
+                    AND (
+                        r.organization_id IN 
+                        <foreach collection="organizationIds" item="id" open="(" separator="," close=")">
+                            #{id}
+                        </foreach> 
+                        OR (
+                            SELECT parent_id FROM organization WHERE id = r.organization_id
+                        ) IN 
+                        <foreach collection="organizationIds" item="id" open="(" separator="," close=")">
+                            #{id}
+                        </foreach>
+                    )
+                </when>
+                <when test="organizationIds != null and organizationIds.size() == 0">
+                    <!-- 返回空结果 -->
+                    AND 1=0
+                </when>
+                <!-- 当organizationIds为null时不添加组织条件，返回所有记录 -->
+            </choose>
+            <if test="memberName != null and memberName != ''">AND u.name LIKE CONCAT('%',#{memberName},'%')</if>
+            <if test="status != null and status != ''">AND r.status = #{status}</if>
+        </where>
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <!-- 获取组织的注册统计数据 -->
+    <select id="getRegisterStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) as total, 
+            SUM(CASE WHEN r.status = '已通过' OR r.status = '已完成' THEN 1 ELSE 0 END) as approved, 
+            SUM(CASE WHEN r.status = '已驳回' THEN 1 ELSE 0 END) as rejected, 
+            SUM(CASE WHEN r.status = '待审核' OR r.status = '团支部已审核' THEN 1 ELSE 0 END) as pending 
+        FROM member_register r 
+        JOIN member_register_batch b ON r.register_year = b.register_year 
+        <where>
+            b.register_year = #{year} 
+            <if test="organizationIds != null and organizationIds.size() > 0">
+                AND (
+                    r.organization_id IN 
+                    <foreach collection="organizationIds" item="id" open="(" separator="," close=")">
+                        #{id}
+                    </foreach> 
+                    OR (
+                        SELECT parent_id FROM organization WHERE id = r.organization_id
+                    ) IN 
+                    <foreach collection="organizationIds" item="id" open="(" separator="," close=")">
+                        #{id}
+                    </foreach>
+                )
+            </if>
+        </where>
+    </select>
+    
+    <!-- 获取指定批次的成员列表（专用于批次详情页） -->
+    <select id="getBatchMemberList" resultMap="BaseResultMap">
+        SELECT 
+            r.*,
+            b.batch_name as batchCode, 
+            b.batch_name as title, 
+            b.register_year as batch_year,
+            u.name as memberName, 
+            u.league_number as memberCode, 
+            o.name as organizationName,
+            r.organization_id as branchId, 
+            (SELECT parent_id FROM organization WHERE id = r.organization_id) as committeeId 
+        FROM 
+            member_register r
+        JOIN 
+            member_register_batch b ON r.batch_id = b.id
+        JOIN 
+            user u ON r.user_id = u.id
+        JOIN 
+            organization o ON r.organization_id = o.id
+        WHERE 
+            r.batch_id = #{batchId}
+            <if test="keyword != null and keyword != ''">
+                AND (u.name LIKE CONCAT('%',#{keyword},'%') OR u.league_number LIKE CONCAT('%',#{keyword},'%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND r.status = #{status}
+            </if>
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <!-- 更新注册状态 -->
+    <update id="updateStatus">
+        UPDATE member_register 
+        SET status = #{status}, 
+            remark = #{comments}, 
+            approver_id = #{approverId}, 
+            approver_name = #{approverName}, 
+            approval_time = NOW(), 
+            update_time = NOW() 
+        WHERE id = #{id}
+    </update>
+</mapper> 

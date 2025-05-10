@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.HonorTypeMapper">
+
+    <!-- 基础映射结果集 -->
+    <resultMap id="BaseResultMap" type="com.zhtj.domain.HonorType">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="category" property="category"/>
+        <result column="level" property="level"/>
+        <result column="score" property="score"/>
+        <result column="application_condition" property="applicationCondition"/>
+        <result column="review_process" property="reviewProcess"/>
+        <result column="material_requirement" property="materialRequirement"/>
+        <result column="status" property="status"/>
+        <result column="issue_department" property="issueDepartment"/>
+        <result column="valid_period" property="validPeriod"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取所有启用的荣誉类型 -->
+    <select id="getAllEnabledTypes" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_type
+        WHERE status = 1
+        <if test="category != null and category != ''">
+            AND category = #{category}
+        </if>
+        <if test="level != null and level != ''">
+            AND level = #{level}
+        </if>
+        ORDER BY id ASC
+    </select>
+
+    <!-- 根据类别获取荣誉类型 -->
+    <select id="getTypesByCategory" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_type
+        WHERE category = #{category}
+        <if test="onlyEnabled">
+            AND status = 1
+        </if>
+        ORDER BY id ASC
+    </select>
+
+    <!-- 获取荣誉类型分页列表(高级查询) -->
+    <select id="getHonorTypePage" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_type
+        <where>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="level != null and level != ''">
+                AND level = #{level}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%') 
+                    OR description LIKE CONCAT('%', #{keyword}, '%')
+                    OR issue_department LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY 
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                id ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 更新荣誉类型状态 -->
+    <update id="updateStatus">
+        UPDATE honor_type
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 按类别统计荣誉类型数量 -->
+    <select id="countByCategory" resultType="java.util.Map">
+        SELECT category, COUNT(*) as count
+        FROM honor_type
+        GROUP BY category
+    </select>
+
+    <!-- 按级别统计荣誉类型数量 -->
+    <select id="countByLevel" resultType="java.util.Map">
+        SELECT level, COUNT(*) as count
+        FROM honor_type
+        GROUP BY level
+    </select>
+
+</mapper> 

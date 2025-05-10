@@ -1,0 +1,40 @@
+{
+  "name": "zhtj-ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "@element-plus/icons-vue": "^2.3.1",
+    "@vue-office/docx": "^1.6.3",
+    "@vue-office/excel": "^1.7.14",
+    "@vue-office/pdf": "^2.0.10",
+    "ant-design-vue": "^4.2.6",
+    "axios": "^1.8.4",
+    "element-plus": "^2.9.7",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
+    "pinia": "^3.0.1",
+    "vue": "^3.5.13",
+    "vue-demi": "^0.14.10",
+    "vue-router": "^4.5.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.13",
+    "@types/xlsx": "^0.0.36",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "less": "^4.3.0",
+    "less-loader": "^12.3.0",
+    "sass-embedded": "^1.86.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0",
+    "vue-tsc": "^2.2.4"
+  }
+}

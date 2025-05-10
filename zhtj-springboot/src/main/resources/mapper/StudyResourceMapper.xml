@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.StudyResourceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhtj.domain.StudyResource">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="description" property="description" />
+        <result column="file_url" property="fileUrl" />
+        <result column="file_name" property="fileName" />
+        <result column="file_size" property="fileSize" />
+        <result column="format" property="format" />
+        <result column="category_id" property="categoryId" />
+        <result column="organization_id" property="organizationId" />
+        <result column="creator_id" property="creatorId" />
+        <result column="creator_name" property="creatorName" />
+        <result column="downloads" property="downloads" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+    
+    <!-- 扩展结果映射 -->
+    <resultMap id="ResourceVOMap" type="com.zhtj.domain.vo.StudyResourceVO">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="description" property="description" />
+        <result column="category_id" property="categoryId" />
+        <result column="category_name" property="categoryName" />
+        <result column="file_url" property="fileUrl" />
+        <result column="file_name" property="fileName" />
+        <result column="file_size" property="fileSize" />
+        <result column="format" property="format" />
+        <result column="creator_id" property="creatorId" />
+        <result column="creator_name" property="creatorName" />
+        <result column="organization_id" property="organizationId" />
+        <result column="organization_name" property="organizationName" />
+        <result column="downloads" property="downloads" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+    
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, title, description, file_url, file_name, file_size, format, 
+        category_id, organization_id, creator_id, creator_name, downloads, 
+        create_time, update_time
+    </sql>
+    
+    <!-- 分页查询学习资源 -->
+    <select id="selectResourcePage" resultMap="ResourceVOMap">
+        SELECT 
+            sr.id, sr.title, sr.description, sr.category_id, 
+            CASE sr.category_id 
+                WHEN 1 THEN '思想理论'
+                WHEN 2 THEN '时政热点'
+                WHEN 3 THEN '团史学习'
+                WHEN 4 THEN '团章团规'
+                WHEN 5 THEN '入团教育'
+                WHEN 6 THEN '其他'
+                ELSE '未知'
+            END AS category_name,
+            sr.file_url, sr.file_name, sr.file_size, sr.format,
+            sr.creator_id, sr.creator_name, sr.organization_id,
+            sr.downloads, sr.create_time, sr.update_time
+        FROM 
+            study_resource sr
+        WHERE 
+            1=1
+            <if test="title != null and title != ''">
+                AND sr.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="category != null">
+                AND sr.category_id = #{category}
+            </if>
+            <if test="orgId != null">
+                AND sr.organization_id = #{orgId}
+            </if>
+        ORDER BY 
+            sr.create_time DESC
+    </select>
+    
+    <!-- 根据ID查询资源详情 -->
+    <select id="selectResourceById" resultMap="ResourceVOMap">
+        SELECT 
+            sr.id, sr.title, sr.description, sr.category_id, 
+            CASE sr.category_id 
+                WHEN 1 THEN '思想理论'
+                WHEN 2 THEN '时政热点'
+                WHEN 3 THEN '团史学习'
+                WHEN 4 THEN '团章团规'
+                WHEN 5 THEN '入团教育'
+                WHEN 6 THEN '其他'
+                ELSE '未知'
+            END AS category_name,
+            sr.file_url, sr.file_name, sr.file_size, sr.format,
+            sr.creator_id, sr.creator_name, sr.organization_id,
+            sr.downloads, sr.create_time, sr.update_time
+        FROM 
+            study_resource sr
+        WHERE 
+            sr.id = #{id}
+    </select>
+    
+    <!-- 增加下载次数 -->
+    <update id="increaseDownloadCount">
+        UPDATE study_resource 
+        SET downloads = downloads + 1 
+        WHERE id = #{id}
+    </update>
+</mapper> 

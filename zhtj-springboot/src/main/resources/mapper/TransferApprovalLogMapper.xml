@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.TransferApprovalLogMapper">
+    
+    <resultMap id="BaseResultMap" type="com.zhtj.domain.TransferApprovalLog">
+        <id column="id" property="id" />
+        <result column="transfer_id" property="transferId" />
+        <result column="approval_type" property="approvalType" />
+        <result column="approver_id" property="approverId" />
+        <result column="approver_name" property="approverName" />
+        <result column="approved" property="approved" />
+        <result column="approval_remark" property="approvalRemark" />
+        <result column="operation_ip" property="operationIp" />
+        <result column="approval_time" property="approvalTime" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, transfer_id, approval_type, approver_id, approver_name, approved, 
+        approval_remark, operation_ip, approval_time, create_time
+    </sql>
+    
+    <!-- 获取指定转接申请的所有审批日志 -->
+    <select id="getLogsByTransferId" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List" />
+        FROM league_transfer_approval_log
+        WHERE transfer_id = #{transferId}
+        ORDER BY approval_time DESC
+    </select>
+    
+    <!-- 获取指定用户的所有审批日志 -->
+    <select id="getLogsByApproverId" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List" />
+        FROM league_transfer_approval_log
+        WHERE approver_id = #{approverId}
+        ORDER BY approval_time DESC
+    </select>
+    
+    <!-- 根据审批类型获取指定转接申请的审批日志 -->
+    <select id="getLogByTransferIdAndType" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List" />
+        FROM league_transfer_approval_log
+        WHERE transfer_id = #{transferId}
+        AND approval_type = #{approvalType}
+        LIMIT 1
+    </select>
+    
+</mapper> 

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.HonorApplicationMapper">
+
+    <!-- 基础映射结果集 -->
+    <resultMap id="BaseResultMap" type="com.zhtj.domain.HonorApplication">
+        <id column="id" property="id"/>
+        <result column="honor_name" property="honorName"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="organization_id" property="organizationId"/>
+        <result column="organization_name" property="organizationName"/>
+        <result column="application_year" property="applicationYear"/>
+        <result column="application_time" property="applicationTime"/>
+        <result column="application_reason" property="applicationReason"/>
+        <result column="related_evaluation_id" property="relatedEvaluationId"/>
+        <result column="status" property="status"/>
+        <result column="attachment_url" property="attachmentUrl"/>
+        <result column="approver_id" property="approverId"/>
+        <result column="approver_name" property="approverName"/>
+        <result column="approval_time" property="approvalTime"/>
+        <result column="approval_comments" property="approvalComments"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 带有荣誉类型信息的结果集 -->
+    <resultMap id="ApplicationWithTypeMap" type="com.zhtj.domain.HonorApplication" extends="BaseResultMap">
+        <association property="honorType" javaType="com.zhtj.domain.HonorType">
+            <id column="type_id" property="id"/>
+            <result column="type_name" property="name"/>
+            <result column="type_description" property="description"/>
+            <result column="type_category" property="category"/>
+            <result column="type_level" property="level"/>
+            <result column="type_score" property="score"/>
+        </association>
+    </resultMap>
+
+    <!-- 获取荣誉申请分页列表(高级查询) -->
+    <select id="selectHonorApplicationPage" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_application
+        <where>
+            <if test="year != null and year != ''">
+                AND application_year = #{year}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="honorTypeId != null">
+                AND honor_name = (SELECT name FROM honor_type WHERE id = #{honorTypeId})
+            </if>
+            <if test="organizationId != null">
+                AND organization_id = #{organizationId}
+            </if>
+        </where>
+        ORDER BY 
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                application_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取单个荣誉申请详情(带荣誉类型信息) -->
+    <select id="getApplicationWithType" resultMap="ApplicationWithTypeMap">
+        SELECT a.*, 
+               t.id as type_id, 
+               t.name as type_name, 
+               t.description as type_description, 
+               t.category as type_category, 
+               t.level as type_level, 
+               t.score as type_score
+        FROM honor_application a
+        LEFT JOIN honor_type t ON a.honor_type_id = t.id
+        WHERE a.id = #{id}
+    </select>
+
+    <!-- 院级审批 -->
+    <update id="branchApprove">
+        UPDATE honor_application
+        SET status = #{status},
+            branch_approver_id = #{approverId},
+            branch_approval_time = NOW(),
+            branch_approval_comment = #{comment},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 校级审批 -->
+    <update id="higherApprove">
+        UPDATE honor_application
+        SET status = #{status},
+            higher_approver_id = #{approverId},
+            higher_approval_time = NOW(),
+            higher_approval_comment = #{comment},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 按年度统计申请数量 -->
+    <select id="countByYear" resultType="java.util.Map">
+        SELECT application_year as year, COUNT(*) as count
+        FROM honor_application
+        GROUP BY application_year
+        ORDER BY application_year DESC
+    </select>
+
+    <!-- 按状态统计申请数量 -->
+    <select id="countByStatus" resultType="java.util.Map">
+        SELECT status, COUNT(*) as count
+        FROM honor_application
+        <if test="year != null">
+            WHERE application_year = #{year}
+        </if>
+        GROUP BY status
+    </select>
+
+    <!-- 获取待审批的申请数量 -->
+    <select id="getPendingApprovalCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM honor_application
+        WHERE 
+        <choose>
+            <when test="level == 'branch'">
+                status = 0
+            </when>
+            <when test="level == 'higher'">
+                status = 1
+            </when>
+            <otherwise>
+                (status = 0 OR status = 1)
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper> 

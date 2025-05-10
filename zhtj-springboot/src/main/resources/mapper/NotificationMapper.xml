@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.NotificationMapper">
+
+    <!-- 通知查询结果映射 -->
+    <resultMap id="NotificationMap" type="com.zhtj.domain.Notification">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="sender_name" property="senderName"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="recipient_id" property="recipientId"/>
+        <result column="notification_type" property="notificationType"/>
+        <result column="reference_id" property="referenceId"/>
+        <result column="reference_type" property="referenceType"/>
+        <result column="is_read" property="isRead"/>
+        <result column="read_time" property="readTime"/>
+        <result column="priority" property="priority"/>
+        <result column="expire_time" property="expireTime"/>
+        <result column="action_url" property="actionUrl"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="recipient_name" property="recipientName"/>
+    </resultMap>
+
+    <!-- 分页查询通知列表 -->
+    <select id="selectNotificationPage" resultMap="NotificationMap">
+        SELECT n.*
+        FROM notification n
+        WHERE n.recipient_id = #{recipientId}
+        <if test="isRead != null">
+            AND n.is_read = #{isRead}
+        </if>
+        ORDER BY n.create_time DESC
+    </select>
+
+    <!-- 获取未读通知数量 -->
+    <select id="countUnreadNotifications" resultType="int">
+        SELECT COUNT(*)
+        FROM notification
+        WHERE recipient_id = #{recipientId}
+        AND is_read = 0
+    </select>
+
+    <!-- 获取用户的未读通知数量 -->
+    <select id="getUnreadCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM notification
+        WHERE recipient_id = #{userId}
+        AND is_read = 0
+        <if test="notificationType != null and notificationType != ''">
+            AND notification_type = #{notificationType}
+        </if>
+    </select>
+
+    <!-- 获取用户通知分页列表 -->
+    <select id="getNotificationPage" resultMap="NotificationMap">
+        SELECT *
+        FROM notification
+        WHERE recipient_id = #{userId}
+        <if test="isRead != null">
+            AND is_read = #{isRead}
+        </if>
+        <if test="notificationType != null and notificationType != ''">
+            AND notification_type = #{notificationType}
+        </if>
+        ORDER BY 
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                priority DESC, create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 批量更新通知已读状态 -->
+    <update id="batchUpdateReadStatus">
+        UPDATE notification
+        SET is_read = 1,
+            read_time = NOW()
+        WHERE id IN
+        <foreach collection="notificationIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND recipient_id = #{userId}
+    </update>
+
+    <!-- 更新用户所有通知为已读 -->
+    <update id="markAllAsRead">
+        UPDATE notification
+        SET is_read = 1,
+            read_time = NOW()
+        WHERE recipient_id = #{userId}
+        AND is_read = 0
+    </update>
+
+    <!-- 根据引用业务ID和类型查询通知 -->
+    <select id="getByReferenceInfo" resultMap="NotificationMap">
+        SELECT *
+        FROM notification
+        WHERE reference_id = #{referenceId}
+        AND reference_type = #{referenceType}
+        <if test="recipientId != null">
+            AND recipient_id = #{recipientId}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 删除过期通知 -->
+    <delete id="deleteExpiredNotifications">
+        DELETE FROM notification
+        WHERE expire_time IS NOT NULL
+        AND expire_time &lt; NOW()
+    </delete>
+
+</mapper> 

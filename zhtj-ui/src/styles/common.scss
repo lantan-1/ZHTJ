@@ -1,0 +1,239 @@
+@import './variables.scss';
+
+/* 全局基础样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Microsoft YaHei", "微软雅黑", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: $font-size-base;
+  color: $text-color;
+  background-color: $background-color;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-base;
+
+  &:hover {
+    color: $primary-light;
+  }
+}
+
+/* 自定义Element UI组件样式 */
+.el-card {
+  border: none;
+  border-radius: $border-radius-large;
+  box-shadow: $box-shadow-light;
+  transition: all $transition-base;
+
+  &:hover {
+    box-shadow: $box-shadow-medium;
+  }
+  
+  .el-card__header {
+    padding: $spacing-medium $spacing-xlarge;
+    border-bottom: 1px solid rgba($border-color, 0.5);
+  }
+  
+  .el-card__body {
+    padding: $spacing-large;
+  }
+}
+
+.el-button--primary {
+  background-color: $primary-color;
+  border-color: $primary-color;
+  
+  &:hover, &:focus {
+    background-color: $primary-light;
+    border-color: $primary-light;
+  }
+}
+
+.el-button--danger {
+  background-color: $error-color;
+  border-color: $error-color;
+}
+
+.el-menu {
+  border-right: none;
+}
+
+.el-dropdown-menu {
+  border: none;
+  border-radius: $border-radius-base;
+  box-shadow: $box-shadow-medium;
+}
+
+/* 常用辅助类 */
+.text-primary {
+  color: $primary-color !important;
+}
+
+.text-secondary {
+  color: $secondary-color !important;
+}
+
+.text-success {
+  color: $success-color !important;
+}
+
+.text-warning {
+  color: $warning-color !important;
+}
+
+.text-error {
+  color: $error-color !important;
+}
+
+.text-info {
+  color: $info-color !important;
+}
+
+.text-light {
+  color: $text-light !important;
+}
+
+.text-lighter {
+  color: $text-lighter !important;
+}
+
+.bg-primary {
+  background-color: $primary-color !important;
+}
+
+.bg-white {
+  background-color: $white !important;
+}
+
+.w-100 {
+  width: 100% !important;
+}
+
+.h-100 {
+  height: 100% !important;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.flex-column {
+  flex-direction: column !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.justify-content-center {
+  justify-content: center !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.rounded {
+  border-radius: $border-radius-base !important;
+}
+
+.rounded-circle {
+  border-radius: $border-radius-circle !important;
+}
+
+.shadow {
+  box-shadow: $box-shadow-light !important;
+}
+
+.shadow-md {
+  box-shadow: $box-shadow-medium !important;
+}
+
+.shadow-lg {
+  box-shadow: $box-shadow-heavy !important;
+}
+
+.p-0 { padding: 0 !important; }
+.p-1 { padding: $spacing-mini !important; }
+.p-2 { padding: $spacing-small !important; }
+.p-3 { padding: $spacing-base !important; }
+.p-4 { padding: $spacing-medium !important; }
+.p-5 { padding: $spacing-large !important; }
+
+.m-0 { margin: 0 !important; }
+.m-1 { margin: $spacing-mini !important; }
+.m-2 { margin: $spacing-small !important; }
+.m-3 { margin: $spacing-base !important; }
+.m-4 { margin: $spacing-medium !important; }
+.m-5 { margin: $spacing-large !important; }
+
+.mt-1 { margin-top: $spacing-mini !important; }
+.mt-2 { margin-top: $spacing-small !important; }
+.mt-3 { margin-top: $spacing-base !important; }
+.mt-4 { margin-top: $spacing-medium !important; }
+.mt-5 { margin-top: $spacing-large !important; }
+
+.mb-1 { margin-bottom: $spacing-mini !important; }
+.mb-2 { margin-bottom: $spacing-small !important; }
+.mb-3 { margin-bottom: $spacing-base !important; }
+.mb-4 { margin-bottom: $spacing-medium !important; }
+.mb-5 { margin-bottom: $spacing-large !important; }
+
+/* 动画效果 */
+.fade-enter-active, 
+.fade-leave-active {
+  transition: opacity $transition-base;
+}
+
+.fade-enter-from, 
+.fade-leave-to {
+  opacity: 0;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* 响应式工具类 */
+@media (max-width: $breakpoint-sm) {
+  .d-sm-none {
+    display: none !important;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .d-md-none {
+    display: none !important;
+  }
+}
+
+@media (max-width: $breakpoint-lg) {
+  .d-lg-none {
+    display: none !important;
+  }
+} 

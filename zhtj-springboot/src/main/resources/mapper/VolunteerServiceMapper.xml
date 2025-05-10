@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.VolunteerServiceMapper">
+
+    <!-- 基础映射结果集 -->
+    <resultMap id="BaseResultMap" type="com.zhtj.domain.VolunteerService">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="organization_id" property="organizationId"/>
+        <result column="organization_name" property="organizationName"/>
+        <result column="service_year" property="serviceYear"/>
+        <result column="service_duration" property="serviceDuration"/>
+        <result column="service_description" property="serviceDescription"/>
+        <result column="service_location" property="serviceLocation"/>
+        <result column="service_type" property="serviceType"/>
+        <result column="service_start_time" property="serviceStartTime"/>
+        <result column="service_end_time" property="serviceEndTime"/>
+        <result column="service_proof" property="serviceProof"/>
+        <result column="verification_status" property="verificationStatus"/>
+        <result column="verification_remark" property="verificationRemark"/>
+        <result column="verifier_user_id" property="verifierUserId"/>
+        <result column="verifier_user_name" property="verifierUserName"/>
+        <result column="verification_time" property="verificationTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取用户的志愿服务总时长 -->
+    <select id="getUserTotalServiceHours" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(service_duration), 0)
+        FROM volunteer_service
+        WHERE user_id = #{userId}
+        AND verification_status = 1
+        <if test="year != null">
+            AND service_year = #{year}
+        </if>
+    </select>
+
+    <!-- 获取组织的志愿服务总时长 -->
+    <select id="getOrganizationTotalServiceHours" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(service_duration), 0)
+        FROM volunteer_service
+        WHERE organization_id = #{organizationId}
+        AND verification_status = 1
+        <if test="year != null">
+            AND service_year = #{year}
+        </if>
+    </select>
+
+    <!-- 获取志愿服务分页列表(高级查询) -->
+    <select id="getVolunteerServicePage" resultMap="BaseResultMap">
+        SELECT *
+        FROM volunteer_service
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="organizationId != null">
+                AND organization_id = #{organizationId}
+            </if>
+            <if test="year != null">
+                AND service_year = #{year}
+            </if>
+            <if test="verificationStatus != null">
+                AND verification_status = #{verificationStatus}
+            </if>
+            <if test="serviceType != null and serviceType != ''">
+                AND service_type = #{serviceType}
+            </if>
+            <if test="startTime != null">
+                AND service_start_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND service_end_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY 
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                service_start_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 批量通过审核 -->
+    <update id="batchVerifyServices">
+        UPDATE volunteer_service
+        SET verification_status = #{status},
+            verification_remark = #{remark},
+            verifier_user_id = #{verifierUserId},
+            verifier_user_name = #{verifierUserName},
+            verification_time = NOW(),
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="serviceIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 获取用户按年份的服务统计 -->
+    <select id="getUserServiceStatsByYear" resultType="java.util.Map">
+        SELECT service_year AS year, 
+               COUNT(*) AS serviceCount, 
+               SUM(service_duration) AS totalHours
+        FROM volunteer_service
+        WHERE user_id = #{userId}
+        AND verification_status = 1
+        GROUP BY service_year
+        ORDER BY service_year DESC
+    </select>
+
+    <!-- 获取组织按年份的服务统计 -->
+    <select id="getOrganizationServiceStatsByYear" resultType="java.util.Map">
+        SELECT service_year AS year, 
+               COUNT(*) AS serviceCount, 
+               SUM(service_duration) AS totalHours,
+               COUNT(DISTINCT user_id) AS volunteerCount
+        FROM volunteer_service
+        WHERE organization_id = #{organizationId}
+        AND verification_status = 1
+        GROUP BY service_year
+        ORDER BY service_year DESC
+    </select>
+
+</mapper> 

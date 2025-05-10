@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.zhtj.domain.User">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="card" property="card"/>
+        <result column="gender" property="gender"/>
+        <result column="ethnic" property="ethnic"/>
+        <result column="occupation" property="occupation"/>
+        <result column="education_status" property="educationStatus"/>
+        <result column="education_level" property="educationLevel"/>
+        <result column="political_status" property="politicalStatus"/>
+        <result column="join_league_date" property="joinLeagueDate"/>
+        <result column="join_party_date" property="joinPartyDate"/>
+        <result column="work_unit" property="workUnit"/>
+        <result column="address" property="address"/>
+        <result column="qq" property="qq"/>
+        <result column="wechat" property="wechat"/>
+        <result column="weibo" property="weibo"/>
+        <result column="league_position" property="leaguePosition"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="organization" property="organization"/>
+        <result column="previous_organization" property="previousOrganization"/>
+        <result column="transfer_date" property="transferDate"/>
+        <result column="transfer_count" property="transferCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="organization_name" property="organizationName"/>
+    </resultMap>
+
+    <!-- 自定义查询方法 -->
+    <select id="selectById" resultMap="UserResultMap" parameterType="java.lang.Integer">
+        SELECT id,name,card,gender,ethnic,occupation,education_status,education_level,political_status,
+               join_league_date,join_party_date,work_unit,address,qq,wechat,weibo,league_position,phone,email,
+               organization,previous_organization,transfer_date,transfer_count,create_time,update_time
+        FROM user
+        WHERE id=#{id}
+    </select>
+
+    <!-- 分页查询待激活用户列表，不返回密码字段 -->
+    <select id="selectPendingUsersPage" resultType="com.zhtj.domain.User">
+        SELECT 
+            u.id, u.name, u.card, 
+            u.gender, u.ethnic, u.occupation, 
+            u.education_status AS educationStatus, 
+            u.education_level AS educationLevel,
+            u.political_status AS politicalStatus,
+            u.join_league_date AS joinLeagueDate,
+            u.join_party_date AS joinPartyDate,
+            u.work_unit AS workUnit, u.address,
+            u.qq, u.wechat, u.weibo,
+            u.league_position AS leaguePosition,
+            u.phone, u.email,
+            u.organization, u.previous_organization AS previousOrganization,
+            u.transfer_date AS transferDate,
+            u.transfer_count AS transferCount,
+            u.create_time AS createTime,
+            u.update_time AS updateTime,
+            u.is_activated AS isActivated,
+            o.name AS organizationName
+        FROM 
+            user u
+        LEFT JOIN 
+            organization o ON u.organization = o.id
+        WHERE 
+            u.organization IN 
+            <foreach collection="orgIds" item="orgId" open="(" separator="," close=")">
+                #{orgId}
+            </foreach>
+        <if test="isActivated != null">
+            AND u.is_activated = #{isActivated}
+        </if>
+        <if test="name != null and name != ''">
+            AND u.name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        ORDER BY 
+            u.create_time DESC
+    </select>
+
+</mapper> 

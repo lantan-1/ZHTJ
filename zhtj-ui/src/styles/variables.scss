@@ -1,0 +1,57 @@
+// 主题色变量
+$primary-color: #c62828;
+$primary-light: #ff5f52;
+$primary-dark: #8e0000;
+$secondary-color: #ffd04b;
+$text-color: #333333;
+$text-light: #666666;
+$text-lighter: #999999;
+$background-color: #f5f7fa;
+$white: #ffffff;
+$black: #000000;
+$border-color: #e0e0e0;
+$success-color: #67c23a;
+$warning-color: #e6a23c;
+$error-color: #f56c6c;
+$info-color: #909399;
+
+// 阴影
+$box-shadow-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+$box-shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
+$box-shadow-heavy: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+// 字体大小
+$font-size-small: 12px;
+$font-size-base: 14px;
+$font-size-medium: 16px;
+$font-size-large: 18px;
+$font-size-xlarge: 20px;
+$font-size-xxlarge: 24px;
+
+// 边距
+$spacing-mini: 4px;
+$spacing-small: 8px;
+$spacing-base: 12px;
+$spacing-medium: 16px;
+$spacing-large: 20px;
+$spacing-xlarge: 24px;
+$spacing-xxlarge: 32px;
+
+// 边框
+$border-radius-small: 2px;
+$border-radius-base: 4px;
+$border-radius-large: 8px;
+$border-radius-xlarge: 16px;
+$border-radius-circle: 50%;
+
+// 过渡
+$transition-fast: 0.2s;
+$transition-base: 0.3s;
+$transition-slow: 0.5s;
+
+// 断点
+$breakpoint-xs: 576px;
+$breakpoint-sm: 768px;
+$breakpoint-md: 992px;
+$breakpoint-lg: 1200px;
+$breakpoint-xl: 1600px; 

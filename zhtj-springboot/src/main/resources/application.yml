@@ -1,0 +1,147 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# 添加详细日志配置
+logging:
+  level:
+    root: INFO
+    org.springframework: DEBUG
+    org.springframework.beans: TRACE
+    org.springframework.context: TRACE
+    com.zhtj: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation: TRACE
+
+# 健康检查配置
+management:
+  health:
+    mail:
+      enabled: false # 禁用邮件健康检查，避免连接超时影响应用启动
+
+# 密码重置配置
+reset:
+  password:
+    code:
+      expire: 300  # 密码重置验证码过期时间（秒）
+    max-attempts: 5  # 单IP最大尝试次数（1小时内）
+    cooldown: 60  # 验证码发送冷却时间（秒）
+    strength:
+      enabled: false  # 是否启用密码强度验证
+      min-length: 8  # 最小密码长度
+      require-mixed: false  # 是否要求混合大小写和数字
+
+# 开发环境配置
+dev:
+  auth:
+    master-password:
+      enabled: true  # 生产环境应设置为false
+      password: "123456"  # 开发环境万能密码
+
+# 文件存储配置
+file:
+  upload:
+    # 学习资源存储路径配置
+    study-resource:
+      path: E:/Hunter/Project/zhtj/study-resources  # 学习资源存储目录
+      max-size: 100  # 最大文件大小限制(MB)
+      allowed-types: pdf,doc,docx,ppt,pptx,txt,mp4,mp3,zip,rar  # 允许上传的文件类型
+  local-storage:
+    base-path: E:/Hunter/Project/zhtj/study-resources  # 本地文件存储根目录
+    public-url-prefix: http://localhost:8080/api/static  # 访问文件的URL前缀
+  allowed-file-types:
+    images: jpg,jpeg,png,gif,bmp,webp
+    documents: pdf,doc,docx,xls,xlsx,ppt,pptx,txt
+    videos: mp4,avi,mov,wmv,flv,mkv
+
+# MinIO对象存储配置
+minio:
+  enabled: false              # 禁用MinIO
+  endpoint: http://localhost:9000  # MinIO服务地址
+  access-key: minioadmin         # 访问密钥（默认值，根据实际配置修改）
+  secret-key: minioadmin         # 密钥（默认值，根据实际配置修改）
+  bucket-name: zhtj              # 存储桶名称
+  secure: false                  # 是否使用HTTPS
+
+spring:
+  main:
+    log-startup-info: true
+    # 让Spring显示自动配置详情
+    banner-mode: off
+    # 禁止启动自动配置报告
+    lazy-initialization: false
+    # 允许循环依赖
+    allow-circular-references: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/zhtj?allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: root
+  mvc:
+    throw-exception-if-no-handler-found: true
+    static-path-pattern: /static/**
+  web:
+    resources:
+      add-mappings: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 10000
+      client-type: lettuce
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+  # 邮件配置
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: lantank2024@163.com
+    password: PJWNpShgy4GXCLQm #授权密码，非邮箱密码，授权码是用于登录第三方邮件客户端的专用密码。
+    test-connection: false # 启动时不测试连接
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 25000 # 连接超时时间
+          connectiontimeout: 5000 # 连接超时时间
+          writetimeout: 5000 # 写入超时时间
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+            trust: smtp.163.com # 信任的域名
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      table-underline: true
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.zhtj.domain
+
+# JWT配置
+jwt:
+  secret-key: Y7zXfB3jD9qS8mE5vN2gH6tK1lP0wR4uA5cQ7bT3xZ8yW2oV6pL1mN9kI0jS3dF5gH7aT2zA3xC5vB9nM3jL5kD8
+  token-expiration: 7200  # 秒数，2小时
+  issuer: zhtj-system
+  
+
+# 阿里云短信配置
+aliyun:
+  sms:
+    enabled: true  # 启用阿里云短信服务
+    access-key-id: "LTAI5tNBWGoscwTZKVQrGTdn"  # 请替换为实际AccessKey ID
+    access-key-secret: "McnbJ3zIdxwmULh6vu2QDipqaWsOyD"  # 请替换为实际AccessKey Secret
+    sign-name: 蓝探  # 短信签名
+    template-code:
+      verification: SMS_465656030  # 验证码短信模板ID
+      notification: SMS_481065234  # 通知短信模板ID

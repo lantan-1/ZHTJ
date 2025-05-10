@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhtj.mapper.HonorAwardMapper">
+
+    <!-- 基础映射结果集 -->
+    <resultMap id="BaseResultMap" type="com.zhtj.domain.HonorAward">
+        <id column="id" property="id"/>
+        <result column="honor_type_id" property="honorTypeId"/>
+        <result column="honor_type_name" property="honorTypeName"/>
+        <result column="application_id" property="applicationId"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="organization_id" property="organizationId"/>
+        <result column="organization_name" property="organizationName"/>
+        <result column="award_year" property="awardYear"/>
+        <result column="award_time" property="awardTime"/>
+        <result column="certificate_no" property="certificateNo"/>
+        <result column="certificate_image" property="certificateImage"/>
+        <result column="award_reason" property="awardReason"/>
+        <result column="award_description" property="awardDescription"/>
+        <result column="awarding_department" property="awardingDepartment"/>
+        <result column="awarding_user_id" property="awardingUserId"/>
+        <result column="awarding_user_name" property="awardingUserName"/>
+        <result column="score" property="score"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取荣誉授予记录分页列表(高级查询) -->
+    <select id="getHonorAwardPage" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_award
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="organizationId != null">
+                AND organization_id = #{organizationId}
+            </if>
+            <if test="year != null">
+                AND award_year = #{year}
+            </if>
+            <if test="honorTypeId != null">
+                AND honor_type_id = #{honorTypeId}
+            </if>
+            <if test="applicationId != null">
+                AND application_id = #{applicationId}
+            </if>
+            <if test="startTime != null">
+                AND award_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND award_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY 
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ${orderBy}
+            </when>
+            <otherwise>
+                award_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 根据申请ID获取授予记录 -->
+    <select id="getByApplicationId" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_award
+        WHERE application_id = #{applicationId}
+    </select>
+
+    <!-- 获取用户的荣誉授予记录 -->
+    <select id="getByUserId" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_award
+        WHERE user_id = #{userId}
+        <if test="year != null">
+            AND award_year = #{year}
+        </if>
+        <if test="honorTypeId != null">
+            AND honor_type_id = #{honorTypeId}
+        </if>
+        ORDER BY award_time DESC
+    </select>
+
+    <!-- 获取组织的荣誉授予记录 -->
+    <select id="getByOrganizationId" resultMap="BaseResultMap">
+        SELECT *
+        FROM honor_award
+        WHERE organization_id = #{organizationId}
+        <if test="year != null">
+            AND award_year = #{year}
+        </if>
+        <if test="honorTypeId != null">
+            AND honor_type_id = #{honorTypeId}
+        </if>
+        ORDER BY award_time DESC
+    </select>
+
+    <!-- 按年度统计授予记录数量 -->
+    <select id="countByYear" resultType="java.util.Map">
+        SELECT award_year as year, COUNT(*) as count
+        FROM honor_award
+        GROUP BY award_year
+        ORDER BY award_year DESC
+    </select>
+
+    <!-- 按荣誉类型统计授予记录数量 -->
+    <select id="countByHonorType" resultType="java.util.Map">
+        SELECT honor_type_id, honor_type_name, COUNT(*) as count
+        FROM honor_award
+        <if test="year != null">
+            WHERE award_year = #{year}
+        </if>
+        GROUP BY honor_type_id, honor_type_name
+    </select>
+
+    <!-- 获取用户总积分 -->
+    <select id="getUserTotalScore" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(score), 0)
+        FROM honor_award
+        WHERE user_id = #{userId}
+        <if test="year != null">
+            AND award_year = #{year}
+        </if>
+    </select>
+
+    <!-- 获取组织总积分 -->
+    <select id="getOrganizationTotalScore" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(score), 0)
+        FROM honor_award
+        WHERE organization_id = #{organizationId}
+        <if test="year != null">
+            AND award_year = #{year}
+        </if>
+    </select>
+
+</mapper> 
