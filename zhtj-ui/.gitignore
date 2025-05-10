@@ -1,4 +1,14 @@
-# Logs
+# 依赖和构建目录
+node_modules
+dist
+dist-ssr
+*.local
+coverage
+temp
+.temp
+.cache
+
+# 日志文件
 logs
 *.log
 npm-debug.log*
@@ -7,18 +17,71 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# 编辑器和IDE
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# 环境变量和本地配置
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+
+# Vite 和 Vue 相关文件
+stats.html
+.netlify
+.vercel
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# TypeScript 相关文件
+*.tsbuildinfo
+.tsc-out
+.nyc_output
+
+# 测试相关文件
+/coverage
+/cypress/videos/
+/cypress/screenshots/
+
+# 打包/压缩文件
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+
+# 其他临时文件和目录
+.history
+.tmp
+.temp
+.sass-cache
+.parcel-cache
+.turbo
+.pnpm-store/
+.nuxt
+.output
+
+# 缓存文件
+.eslintcache
+.stylelintcache
+.stylelintrc.cache
+.prettiercache
+.prettierrc.cache

@@ -1,103 +1,205 @@
-# IntelliJ IDEA
-.idea/
-*.iws
-*.iml
-*.ipr
+# 智慧团建系统 .gitignore 文件
 
-# Visual Studio Code
-.vscode/
+### 通用忽略规则 ###
+# 版本控制系统目录
+.git/
+.svn/
+.hg/
+
+# 临时文件
+*.log
+*.swp
+*.bak
+*~
+*.tmp
+*.temp
 .history/
-*.code-workspace
 
-# Eclipse
-.classpath
-.project
-.settings/
+# 操作系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Maven
+### Java/Spring Boot 相关 ###
+# 编译文件
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.class
+bin/
+out/
+build/
+
+# 打包文件
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+!maven-wrapper.jar
+
+# 日志文件
+logs/
+*.log.*
+log/
+
+# Maven 特有文件
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
 
-# Node
+# Gradle 特有文件
+.gradle/
+.gradle
+**/build/
+!src/**/build/
+
+# Spring Boot 特有文件
+.spring.boot.properties
+HELP.md
+.springBeans
+.sts4-cache
+
+### 前端/Vue/UI 相关 ###
+# 依赖目录
 node_modules/
+jspm_packages/
+bower_components/
+
+# 构建目录
 dist/
 dist-ssr/
+build/
 coverage/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+.next/
+out/
+.nuxt/
+.vuepress/dist
+.serverless/
+.fusebox/
 
-# Operating System Files
-.DS_Store
-Thumbs.db
-*.sw?
-.#*
-*#
-*~
-*.sublime-*
+# 缓存目录
+.cache/
+.parcel-cache/
+.npm/
+.yarn/
+.pnp.*
+.sass-cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+.babel-cache/
+.webpack/
+.temp/
+.cache
 
-# Logs
-logs/
-*.log
+# 环境变量文件
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+
+# Vite 特有文件
+*.local
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Vue 特有文件
+*.tsbuildinfo
+.vscode/.debug.script.mjs
+
+# 包管理器日志
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+### IDE/编辑器相关 ###
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.idea/
 
-# TypeScript
-*.tsbuildinfo
-
-# Build
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Spring Boot
-**/application-dev.properties
-**/application-prod.properties
-**/application-local.properties
-**/src/main/resources/application-dev.yml
-**/src/main/resources/application-prod.yml
-**/src/main/resources/application-local.yml
-
-# Cache files
-.sass-cache/
-.eslintcache
-.stylelintcache
-.temp/
-.cache/
-
-# Certificates
-*.pem
-*.key
-*.crt
-
-# IDE specific files
+# Eclipse
+.settings/
+.project
+.classpath
 .factorypath
 .apt_generated/
+.sts4-cache/
 
-# Compiled output
-*.class
+# IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+.idea/
+*.idea
+out/
+.idea_modules/
 
-# MinIO
-minio-data/
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
 
-# Editor directories and files
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln 
+### 文档和资源文件 ###
+# 文档工作文件
+~$*.doc*
+~$*.xls*
+~$*.ppt*
+*.~vsd*
+
+# 可能包含敏感信息的文件
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+### 项目特有文件 ###
+# 学习资源目录中的大文件
+study-resources
+
+# 自定义Cursor IDE忽略文件
+.cursorignore
+
+# 排除特定测试文件
+!上传功能测试文件.pdf
+
+# 测试输出和报告
+/test-output/
+/reports/
+/coverage/
+
+# 日志和临时数据
+/logs/
+/temp/
+/tmp/
+
+# 自动生成的文件
+.factorypath
+.sts4-cache/
+.annotations/
+
+# 虚拟机崩溃日志
+hs_err_pid*
+replay_pid* 
