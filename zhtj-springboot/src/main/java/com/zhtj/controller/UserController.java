@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.zhtj.service.PasswordResetService;
 import com.zhtj.config.JwtConfig;
+import org.springframework.beans.BeanUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -55,26 +57,43 @@ public class UserController {
     @Autowired
     private JwtConfig jwtConfig;
 
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * 用户注册
      * 
-     * @param userData 用户数据
+     * @param requestData 用户数据
      * @return 注册结果
      */
     @PostMapping("/register")
     @Operation(summary = "用户注册", description = "创建新用户账号")
     public Result<Map<String, Object>> register(@RequestBody Map<String, Object> requestData, HttpServletRequest request) {
-        // 获取用户数据
         User userData = null;
         String captcha = null;
         String captchaKey = null;
-        
+        Integer organizationId = null;
         try {
-            userData = (User) requestData.get("user");
+            // 使用注入的 objectMapper 进行转换
+            Object userObj = requestData.get("user");
+            if (userObj != null) {
+                userData = objectMapper.convertValue(userObj, User.class);
+            }
             captcha = (String) requestData.get("captcha");
             captchaKey = (String) requestData.get("captchaKey");
+            Object orgObj = requestData.get("organization");
+            if (orgObj != null) {
+                if (orgObj instanceof Number) {
+                    organizationId = ((Number) orgObj).intValue();
+                } else if (orgObj instanceof String) {
+                    organizationId = Integer.parseInt((String) orgObj);
+                }
+                if (userData != null) {
+                    userData.setOrganization(organizationId);
+                }
+            }
         } catch (Exception e) {
+            e.printStackTrace(); // 打印异常方便排查
             return Result.validateFailed("请求数据格式错误");
         }
         

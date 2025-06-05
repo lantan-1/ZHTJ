@@ -1,37 +1,63 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { registerUser } from '../api/user';
 import type { User, Organization } from '../api/user';
+import { getOrganizationTree } from '../api/organization';
+import { getCaptcha } from '../api/login';
 
 const router = useRouter();
 
-// 确保user对象存在
-const ensureUserExists = () => {
-  if (!registerForm.user) {
-    registerForm.user = {
-      card: '',
-      pwd: '',
-      tel: '',
-      name: '',
-      sex: '',
-      birthday: ''
-    };
+const orgTree = ref([]);
+const orgLoading = ref(false);
+const captchaImg = ref('');
+const captchaImgUrl = ref('');
+const captchaKey = ref('');
+
+const refreshCaptcha = async () => {
+  try {
+    captchaImg.value = '';
+    captchaImgUrl.value = '';
+    const response = await getCaptcha({ codeType: 'register' });
+    if (response && response.success) {
+      if (response.data.captchaImg) {
+        captchaImg.value = response.data.captchaImg;
+      } else if (response.data.imageUrl) {
+        captchaImgUrl.value = response.data.imageUrl;
+      }
+      captchaKey.value = response.data.key;
+    }
+  } catch (error) {
+    ElMessage.error('获取验证码失败');
   }
 };
 
+onMounted(() => {
+  orgLoading.value = true;
+  try {
+    getOrganizationTree().then(res => {
+      orgTree.value = res.data || [];
+    });
+  } finally {
+    orgLoading.value = false;
+  }
+  refreshCaptcha();
+});
+
 // 表单数据
-const registerForm = reactive<Organization>({
-  name: '',
+const registerForm = reactive({
+  organizationId: null as number | null,
   user: {
     card: '',
     pwd: '',
-    tel: '',
+    phone: '',
     name: '',
-    sex: '',
-    birthday: ''
-  }
+    gender: '',
+    joinLeagueDate: ''
+  },
+  confirmPwd: '',
+  captcha: ''
 });
 
 // 计算属性和setter用于安全访问嵌套属性
@@ -45,9 +71,9 @@ const userPwd = computed({
   set: (val) => { ensureUserExists(); registerForm.user!.pwd = val; }
 });
 
-const userTel = computed({
-  get: () => registerForm.user?.tel || '',
-  set: (val) => { ensureUserExists(); registerForm.user!.tel = val; }
+const userPhone = computed({
+  get: () => registerForm.user?.phone || '',
+  set: (val) => { ensureUserExists(); registerForm.user!.phone = val; }
 });
 
 const userName = computed({
@@ -55,22 +81,19 @@ const userName = computed({
   set: (val) => { ensureUserExists(); registerForm.user!.name = val; }
 });
 
-const userSex = computed({
-  get: () => registerForm.user?.sex || '',
-  set: (val) => { ensureUserExists(); registerForm.user!.sex = val; }
+const userGender = computed({
+  get: () => registerForm.user?.gender || '',
+  set: (val) => { ensureUserExists(); registerForm.user!.gender = val; }
 });
 
-const userBirthday = computed({
-  get: () => registerForm.user?.birthday || '',
-  set: (val) => { ensureUserExists(); registerForm.user!.birthday = val; }
+const userJoinLeagueDate = computed({
+  get: () => registerForm.user?.joinLeagueDate || '',
+  set: (val) => { ensureUserExists(); registerForm.user!.joinLeagueDate = val; }
 });
-
-// 确认密码
-const confirmPwd = ref('');
 
 // 表单验证规则
 const rules = {
-  name: [{ required: true, message: '请输入组织名称', trigger: 'blur' }],
+  organizationId: [{ required: true, message: '请选择组织', trigger: 'change' }],
   'user.card': [
     { required: true, message: '请输入身份证号', trigger: 'blur' },
     { min: 18, max: 18, message: '身份证号长度应为18位', trigger: 'blur' }
@@ -92,17 +115,32 @@ const rules = {
       trigger: 'blur'
     }
   ],
-  'user.tel': [
+  'user.phone': [
     { required: true, message: '请输入电话号码', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
   ],
   'user.name': [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  'user.sex': [{ required: true, message: '请选择性别', trigger: 'change' }],
-  'user.birthday': [{ required: true, message: '请选择出生日期', trigger: 'change' }]
+  'user.gender': [{ required: true, message: '请选择性别', trigger: 'change' }],
+  'user.joinLeagueDate': [{ required: true, message: '请选择入团日期', trigger: 'change' }],
+  captcha: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
 };
 
 const formRef = ref();
 const loading = ref(false);
+
+// 确保user对象存在
+const ensureUserExists = () => {
+  if (!registerForm.user) {
+    registerForm.user = {
+      card: '',
+      pwd: '',
+      phone: '',
+      name: '',
+      gender: '',
+      joinLeagueDate: ''
+    };
+  }
+};
 
 // 注册处理
 const handleRegister = async () => {
@@ -115,13 +153,12 @@ const handleRegister = async () => {
         // 构造请求数据
         const requestData = {
           user: registerForm.user,
-          name: registerForm.name,
-          captcha: "000000", // 可选的验证码，简化处理
-          captchaKey: "register" // 可选的验证码标识，简化处理
+          organization: registerForm.organizationId,
+          captcha: registerForm.captcha,
+          captchaKey: captchaKey.value
         };
         
-        const response = await registerUser(requestData);
-        const result = response.data;
+        const result = await registerUser(requestData);
         
         if (result && (result.code === 200 || result.success)) {
           ElMessage.success('注册成功，请等待管理员激活您的账号');
@@ -160,26 +197,21 @@ const goToLogin = () => {
         </div>
       </template>
       
-      <el-alert
-        title="用户注册后需要管理员激活才能使用系统功能"
-        type="info"
-        description="请联系您所在组织的管理员审核激活您的账号"
-        show-icon
-        :closable="false"
-        style="margin-bottom: 20px"
-      />
-      
       <el-form
         ref="formRef"
         :model="registerForm"
         :rules="rules"
         label-position="top"
       >
-        <el-form-item label="组织名称" prop="name">
-          <el-input
-            v-model="registerForm.name"
-            placeholder="请输入组织名称"
-            clearable
+        <el-form-item label="组织名称" prop="organizationId">
+          <el-tree-select
+            v-model="registerForm.organizationId"
+            :data="orgTree"
+            :props="{ label: 'name', value: 'id', children: 'children' }"
+            placeholder="请选择组织"
+            :loading="orgLoading"
+            check-strictly
+            style="width: 100%"
           />
         </el-form-item>
         
@@ -203,7 +235,7 @@ const goToLogin = () => {
         
         <el-form-item label="确认密码" prop="confirmPwd">
           <el-input
-            v-model="confirmPwd"
+            v-model="registerForm.confirmPwd"
             type="password"
             placeholder="请再次输入密码"
             show-password
@@ -211,9 +243,9 @@ const goToLogin = () => {
           />
         </el-form-item>
         
-        <el-form-item label="电话号码" prop="user.tel">
+        <el-form-item label="电话号码" prop="user.phone">
           <el-input
-            v-model="userTel"
+            v-model="userPhone"
             placeholder="请输入电话号码"
             clearable
           />
@@ -227,9 +259,9 @@ const goToLogin = () => {
           />
         </el-form-item>
         
-        <el-form-item label="性别" prop="user.sex">
+        <el-form-item label="性别" prop="user.gender">
           <el-select
-            v-model="userSex"
+            v-model="userGender"
             placeholder="请选择性别"
             style="width: 100%"
           >
@@ -238,15 +270,33 @@ const goToLogin = () => {
           </el-select>
         </el-form-item>
         
-        <el-form-item label="出生日期" prop="user.birthday">
+        <el-form-item label="入团日期" prop="user.joinLeagueDate">
           <el-date-picker
-            v-model="userBirthday"
+            v-model="userJoinLeagueDate"
             type="date"
-            placeholder="选择出生日期"
+            placeholder="选择入团日期"
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
             style="width: 100%"
           />
+        </el-form-item>
+        
+        <el-form-item label="验证码" prop="captcha">
+          <div style="display: flex; align-items: center; width: 100%;">
+            <el-input
+              v-model="registerForm.captcha"
+              placeholder="请输入验证码"
+              maxlength="4"
+              style="flex: 1; margin-right: 12px;"
+            />
+            <div v-if="captchaImg || captchaImgUrl" class="captcha-img" title="点击刷新验证码" @click="refreshCaptcha" style="flex-shrink: 0;">
+              <img v-if="captchaImg" :src="'data:image/png;base64,' + captchaImg" alt="验证码" style="height: 38px;" />
+              <img v-else-if="captchaImgUrl" :src="captchaImgUrl" alt="验证码" style="height: 38px;" />
+            </div>
+            <div v-else class="captcha-loading" @click="refreshCaptcha" style="flex-shrink: 0;">
+              <el-icon class="is-loading"><Position /></el-icon>
+            </div>
+          </div>
         </el-form-item>
         
         <el-form-item>
@@ -291,5 +341,15 @@ const goToLogin = () => {
 .login-link {
   margin-top: 15px;
   text-align: center;
+}
+
+.captcha-img {
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.captcha-loading {
+  cursor: pointer;
+  margin-left: 8px;
 }
 </style> 

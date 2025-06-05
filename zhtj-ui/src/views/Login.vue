@@ -264,7 +264,7 @@ const goToRegister = () => {
 
 // 前往重置密码页
 const goToResetPwd = () => {
-  router.push('/reset-password');
+  router.push('/forgot-password');
 };
 
 // 前往常见问题页
@@ -388,7 +388,7 @@ onMounted(() => {
         <div class="bottom-links">
           <el-row justify="space-between" class="link-row">
             <el-col :span="4" class="text-center">
-              <el-link :underline="false" @click="router.push('/register')" class="custom-link">
+              <el-link :underline="false" @click="goToRegister" class="custom-link">
                 <el-icon><User /></el-icon>
                 <span>注册</span>
               </el-link>
@@ -397,7 +397,7 @@ onMounted(() => {
               <div class="vertical-divider"></div>
             </el-col>
             <el-col :span="6" class="text-center">
-              <el-link :underline="false" @click="router.push('/forgot-password')" class="custom-link">
+              <el-link :underline="false" @click="goToResetPwd" class="custom-link">
                 <el-icon><Key /></el-icon>
                 <span>忘记密码</span>
               </el-link>

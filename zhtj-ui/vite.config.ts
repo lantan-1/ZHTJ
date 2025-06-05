@@ -88,50 +88,6 @@ export default defineConfig(({ mode }) => {
           target: apiBaseUrl,
           changeOrigin: true,
           rewrite: (path) => `/api${path}`
-        },
-        // 修改对/register/*的处理，确保所有相关路径都能正确代理
-        '/register': {
-          target: apiBaseUrl,
-          changeOrigin: true,
-          rewrite: (path) => `/api${path}`,
-          configure: (proxy, _options) => {
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
-              console.log(`团籍注册代理请求: ${req.method} ${req.url} -> ${apiBaseUrl}/api${req.url}`);
-            });
-          }
-        },
-        // 单独处理/register/batch路径
-        '/register/batch': {
-          target: apiBaseUrl,
-          changeOrigin: true,
-          rewrite: (path) => `/api${path}`,
-          configure: (proxy, _options) => {
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
-              console.log(`团籍批次代理请求: ${req.method} ${req.url} -> ${apiBaseUrl}/api${req.url}`);
-            });
-          }
-        },
-        // 单独处理/register/status路径
-        '/register/status': {
-          target: apiBaseUrl,
-          changeOrigin: true,
-          rewrite: (path) => `/api${path}`,
-          configure: (proxy, _options) => {
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
-              console.log(`注册状态代理请求: ${req.method} ${req.url} -> ${apiBaseUrl}/api${req.url}`);
-            });
-          }
-        },
-        // 单独处理/register/history路径
-        '/register/history': {
-          target: apiBaseUrl,
-          changeOrigin: true,
-          rewrite: (path) => `/api${path}`,
-          configure: (proxy, _options) => {
-            proxy.on('proxyReq', (proxyReq, req, _res) => {
-              console.log(`注册历史代理请求: ${req.method} ${req.url} -> ${apiBaseUrl}/api${req.url}`);
-            });
-          }
         }
       }
     }

@@ -29,13 +29,14 @@
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
         <result column="organization_name" property="organizationName"/>
+        <result column="face_image_path" property="faceImagePath"/>
     </resultMap>
 
     <!-- 自定义查询方法 -->
     <select id="selectById" resultMap="UserResultMap" parameterType="java.lang.Integer">
         SELECT id,name,card,gender,ethnic,occupation,education_status,education_level,political_status,
                join_league_date,join_party_date,work_unit,address,qq,wechat,weibo,league_position,phone,email,
-               organization,previous_organization,transfer_date,transfer_count,create_time,update_time
+               organization,previous_organization,transfer_date,transfer_count,create_time,update_time, face_image_path
         FROM user
         WHERE id=#{id}
     </select>
@@ -60,7 +61,8 @@
             u.create_time AS createTime,
             u.update_time AS updateTime,
             u.is_activated AS isActivated,
-            o.name AS organizationName
+            o.name AS organizationName,
+            u.face_image_path AS faceImagePath
         FROM 
             user u
         LEFT JOIN 

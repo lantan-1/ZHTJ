@@ -223,7 +223,7 @@ const routes: AppRouteRecordRaw[] = [
       },
       {
         path: 'register',
-        name: 'Register',
+        name: 'YearRegister',
         component: () => import('../views/twosystem/Register.vue'),
         meta: {
           title: '年度团籍注册',

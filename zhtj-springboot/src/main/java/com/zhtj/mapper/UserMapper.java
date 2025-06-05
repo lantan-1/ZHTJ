@@ -80,8 +80,8 @@ public interface UserMapper extends BaseMapper<User> {
             "u.education_status, u.education_level, u.political_status, u.join_league_date, " +
             "u.join_party_date, u.work_unit, u.address, u.qq, u.wechat, u.weibo, " +
             "u.league_position, u.phone, u.email, u.organization, u.previous_organization, " +
-            "u.transfer_date, u.transfer_count, u.create_time, u.update_time, " +
-            "o.name as organization_name " +
+            "u.transfer_date, u.transfer_count, u.create_time, u.update_time, u.is_activated, " +
+            "o.name as organization_name, u.face_image_path " +
             "FROM user u " +
             "LEFT JOIN organization o ON u.organization = o.id " +
             "WHERE u.id = #{id}")
@@ -97,7 +97,8 @@ public interface UserMapper extends BaseMapper<User> {
             "u.join_party_date, u.work_unit, u.address, u.qq, u.wechat, u.weibo, " +
             "u.league_position, u.phone, u.email, u.organization, u.previous_organization, " +
             "u.transfer_date, u.transfer_count, u.create_time, u.update_time, " +
-            "o.name as organization_name FROM user u " +
+            "o.name as organization_name, u.face_image_path " +
+            "FROM user u " +
             "LEFT JOIN organization o ON u.organization = o.id " +
             "WHERE u.id = #{id}")
     User getUserDetail(@Param("id") Integer id);

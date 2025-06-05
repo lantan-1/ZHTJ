@@ -80,7 +80,11 @@ public class JwtInterceptor implements HandlerInterceptor {
                path.equals("/error") ||
                path.equals("/users/register") ||  // 注册接口
                path.startsWith("/users/reset-password/") ||  // 所有密码重置相关接口
-               path.startsWith("/api/users/reset-password/");  // API前缀的密码重置相关接口
+               path.startsWith("/api/users/reset-password/") ||  // API前缀的密码重置相关接口
+               path.startsWith("/api/face/reset-password") ||  // 人脸识别重置密码
+               path.startsWith("/api/face/check/") ||  // 根据身份证检查人脸识别信息
+               path.startsWith("/api/organizations/tree") ||  // 获取组织树
+               path.startsWith("/api/users/register");  // 用户注册
     }
     
     /**

@@ -1,8 +1,5 @@
 <template>
   <div class="register-container">
-    <div class="page-header">
-      <h2>年度团籍注册</h2>
-    </div>
 
     <!-- 注册批次卡片 -->
     <el-card class="batch-card" v-loading="batchLoading">

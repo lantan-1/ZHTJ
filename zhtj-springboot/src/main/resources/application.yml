@@ -46,6 +46,11 @@ file:
       path: E:/Hunter/Project/zhtj/study-resources  # 学习资源存储目录
       max-size: 100  # 最大文件大小限制(MB)
       allowed-types: pdf,doc,docx,ppt,pptx,txt,mp4,mp3,zip,rar  # 允许上传的文件类型
+    # 用户人脸信息存储路径配置
+    user-face:
+      path: E:/Hunter/Project/zhtj/user-face  # 用户人脸图片存储目录
+      max-size: 5  # 最大文件大小限制(MB)
+      allowed-types: jpg,jpeg,png  # 允许上传的文件类型
   local-storage:
     base-path: E:/Hunter/Project/zhtj/study-resources  # 本地文件存储根目录
     public-url-prefix: http://localhost:8080/api/static  # 访问文件的URL前缀
@@ -145,3 +150,11 @@ aliyun:
     template-code:
       verification: SMS_465656030  # 验证码短信模板ID
       notification: SMS_481065234  # 通知短信模板ID
+  # 阿里云人脸识别配置
+  face:
+    access-key-id: LTAI5tMkUFZzhXiY68SJ7bSg
+    access-key-secret: bdiI4f7BScmFvyqOa1hY290AxNdOKB
+    endpoint: facebody.cn-shanghai.aliyuncs.com
+    image-path: E:/Hunter/Project/zhtj/user-face
+    liveness-rate-threshold: 80  # （推荐80）攻击拦截率：99.17%  活体通过率：96.39%
+    similarity-threshold: 75  # 阈值：61，69和75，分别对应千分之一，万分之一和十万分之一误识率。

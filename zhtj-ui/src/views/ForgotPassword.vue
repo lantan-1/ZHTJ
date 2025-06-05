@@ -50,6 +50,7 @@
             <el-radio-group v-model="formData.verifyType">
               <el-radio label="email">邮箱验证</el-radio>
               <el-radio label="sms">手机验证</el-radio>
+              <el-radio label="face">人脸验证</el-radio>
             </el-radio-group>
           </el-form-item>
           
@@ -57,8 +58,91 @@
         </el-form>
       </div>
       
+      <!-- 步骤1a：人脸验证 -->
+      <div v-if="currentStep === 1 && formData.verifyType === 'face'" class="step-content face-verification-step">
+         <el-alert
+          title="请正对摄像头，光线充足，避免面部遮挡。"
+          type="info"
+          show-icon
+          :closable="false"
+          style="margin-bottom: 15px"
+        />
+        <div class="camera-container">
+          <video v-if="showCamera" ref="videoElement" autoplay playsinline muted class="camera-preview"></video>
+          <canvas ref="canvasElement" class="photo-canvas" style="display: none;"></canvas>
+          <img v-if="capturedPhotoUrl" :src="capturedPhotoUrl" alt="Captured Face" class="captured-photo">
+        </div>
+        <el-alert
+          v-if="cameraError"
+          :title="cameraError"
+          type="error"
+          show-icon
+          :closable="false"
+          style="margin-bottom: 10px"
+        />
+        <el-button
+          v-if="cameraError"
+          type="primary"
+          @click="openCamera"
+          style="width: 100%; margin-bottom: 10px;"
+        >
+          重新尝试打开摄像头
+        </el-button>
+         <el-button 
+            v-if="!capturedPhotoUrl"
+            type="primary" 
+            @click="capturePhoto" 
+            :disabled="!isCameraReady || !!cameraError" 
+            :loading="!isCameraReady && !cameraError" 
+            style="width: 100%; margin-top: 20px;">
+            {{ !isCameraReady && !cameraError ? '摄像头加载中...' : '拍照验证' }}
+          </el-button>
+          <el-button 
+            v-else
+            type="warning" 
+            @click="resetPhoto" 
+            :disabled="loading" 
+            style="width: 100%; margin-top: 20px;">
+            重拍
+          </el-button>
+
+          <!-- 添加密码输入表单 -->
+          <el-form v-if="capturedPhotoUrl" :model="formData" :rules="rules" ref="formRef" label-position="top" style="margin-top: 20px;">
+            <el-form-item label="新密码" prop="newPassword">
+              <el-input 
+                v-model="formData.newPassword" 
+                placeholder="请输入新密码" 
+                :type="showPassword ? 'text' : 'password'"
+                show-password
+              />
+            </el-form-item>
+            
+            <el-form-item label="确认密码" prop="confirmPassword">
+              <el-input 
+                v-model="formData.confirmPassword" 
+                placeholder="请再次输入新密码" 
+                :type="showPassword ? 'text' : 'password'"
+                show-password
+              />
+            </el-form-item>
+          </el-form>
+
+        <div class="form-actions" style="display: flex; gap: 15px; margin-top: 15px;">
+            <el-button @click="resetToStep1" style="flex: 1;">上一步</el-button>
+            <el-button 
+              type="primary" 
+              @click="submitFaceVerification" 
+              :loading="loading" 
+              :disabled="!capturedPhotoUrl || !formData.newPassword || !formData.confirmPassword"
+              style="flex: 1;">
+              提交人脸验证
+            </el-button>
+        </div>
+      </div>
+
       <!-- 步骤2：输入验证码和新密码 -->
-      <div v-if="currentStep === 1" class="step-content">
+      <!-- 注意：这里需要根据verifyType判断是否显示，如果verifyType是face且验证成功，则可能直接跳过此步骤 -->
+      <div v-if="currentStep === 1 && (formData.verifyType === 'email' || formData.verifyType === 'sms')" class="step-content">
         <el-alert
           v-if="contactInfo"
           :title="`验证码已发送至${formData.verifyType === 'email' ? '邮箱' : '手机'}: ${contactInfo}`"
@@ -127,10 +211,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, reactive, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { sendResetPasswordCode, verifyResetPasswordCode } from '../api/login';
+import { resetPasswordByFace, checkUserFaceByCard } from '../api/face';
 
 type FormValidateCallback = (valid: boolean, fields?: unknown) => void;
 
@@ -161,11 +246,29 @@ const contactInfo = ref('');
 const countdown = ref(0);
 let countdownTimer: number | null = null;
 
+// 摄像头相关增强状态
+const showCamera = ref(false);
+const cameraError = ref('');
+
+// 人脸验证相关状态
+const videoElement = ref<HTMLVideoElement>();
+const canvasElement = ref<HTMLCanvasElement>();
+const stream = ref<MediaStream>();
+const isCameraReady = ref(false);
+const capturedPhotoUrl = ref<string | null>(null);
+let capturedPhotoBlob: Blob | null = null;
+
 // 计算进度条宽度
 const progressWidth = computed(() => {
-  // 总共3个步骤，每完成一步增加33.3%，最后一步完成时100%
-  const stepPercentage = (currentStep.value / 2) * 100;
-  return `${Math.min(stepPercentage, 100)}%`;
+  if (formData.verifyType === 'face') {
+    if (currentStep.value === 0) return '0%';
+    if (currentStep.value === 1) return '50%';
+    if (currentStep.value === 2) return '100%';
+    return '0%';
+  } else {
+    const stepPercentage = (currentStep.value / 2) * 100;
+    return `${Math.min(stepPercentage, 100)}%`;
+  }
 });
 
 // 表单数据
@@ -197,7 +300,7 @@ const rules = reactive<FormRules>({
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
     { 
-      validator: (_: unknown, value: string, callback: (error?: Error) => void) => {
+      validator: (rule: any, value: any, callback: any) => {
         if (value !== formData.newPassword) {
           callback(new Error('两次输入的密码不一致'));
         } else {
@@ -222,34 +325,170 @@ const submitStep1 = async () => {
     loading.value = true;
     
     try {
-      const response = await sendResetPasswordCode(formData.card, formData.verifyType as 'email' | 'sms');
-      
-      if (response && response.success) {
-        // 提取联系信息并显示掩码版本
-        if (formData.verifyType === 'email' && response.data.maskedEmail) {
-          contactInfo.value = response.data.maskedEmail;
-        } else if (formData.verifyType === 'sms' && response.data.maskedPhone) {
-          contactInfo.value = response.data.maskedPhone;
+      if (formData.verifyType === 'face') {
+        // 新增：先校验是否有人脸信息
+        const res = await checkUserFaceByCard(formData.card);
+        if (!res?.data) {
+          ElMessage.error('该用户未录入人脸信息，请选择其他方式找回密码');
+          loading.value = false;
+          return;
         }
-        
-        ElMessage.success(response.message || '验证码已发送');
         currentStep.value = 1;
-        
-        // 启动倒计时
-        startCountdown();
+        await openCamera();
       } else {
-        ElMessage.error(response?.message || '发送验证码失败');
+        const response = await sendResetPasswordCode(formData.card, formData.verifyType as 'email' | 'sms');
+        
+        if (response && response.success) {
+          if (formData.verifyType === 'email' && response.data.maskedEmail) {
+            contactInfo.value = response.data.maskedEmail;
+          } else if (formData.verifyType === 'sms' && response.data.maskedPhone) {
+            contactInfo.value = response.data.maskedPhone;
+          }
+          
+          ElMessage.success(response.message || '验证码已发送');
+          currentStep.value = 1;
+          
+          startCountdown();
+        } else {
+          ElMessage.error(response?.message || '发送验证码失败');
+        }
       }
     } catch (error) {
-      console.error('发送验证码出错', error);
-      ElMessage.error('发送验证码出错');
+      console.error('处理步骤1出错', error);
+      ElMessage.error('操作失败');
     } finally {
       loading.value = false;
     }
   });
 };
 
-// 提交步骤2表单
+// 打开摄像头
+const openCamera = async () => {
+  showCamera.value = true;
+  cameraError.value = '';
+  await nextTick(); // 确保 video 元素已挂载
+  if (!videoElement.value) {
+    cameraError.value = '摄像头组件未加载，请重试';
+    isCameraReady.value = false;
+    return;
+  }
+  try {
+    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    stream.value = mediaStream;
+    videoElement.value.srcObject = mediaStream;
+    videoElement.value.onloadedmetadata = () => {
+      isCameraReady.value = true;
+      videoElement.value?.play();
+    };
+  } catch (err) {
+    console.error('无法访问摄像头:', err);
+    cameraError.value = '无法访问摄像头，请检查权限设置或设备支持情况';
+    isCameraReady.value = false;
+  }
+};
+
+// 关闭摄像头
+const stopCamera = () => {
+  if (stream.value) {
+    stream.value.getTracks().forEach(track => track.stop());
+    stream.value = undefined;
+  }
+  isCameraReady.value = false;
+  showCamera.value = false;
+  if (videoElement.value) {
+    videoElement.value.srcObject = null;
+  }
+};
+
+// 拍照
+const capturePhoto = () => {
+  if (!isCameraReady.value || !videoElement.value || !canvasElement.value) return;
+
+  const video = videoElement.value;
+  const canvas = canvasElement.value;
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    ElMessage.error('无法获取Canvas上下文');
+    return;
+  }
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  canvas.toBlob((blob) => {
+    if (blob) {
+      capturedPhotoBlob = blob;
+      capturedPhotoUrl.value = URL.createObjectURL(blob);
+      stopCamera();
+    } else {
+      ElMessage.error('拍照失败');
+    }
+  }, 'image/jpeg');
+};
+
+// 重置照片，重新开启摄像头
+const resetPhoto = () => {
+  if (capturedPhotoUrl.value) {
+    URL.revokeObjectURL(capturedPhotoUrl.value);
+    capturedPhotoUrl.value = null;
+    capturedPhotoBlob = null;
+  }
+  openCamera();
+};
+
+// 提交人脸验证
+const submitFaceVerification = async () => {
+  if (!formData.card || !capturedPhotoBlob || !formData.newPassword) {
+    ElMessage.warning('请先输入身份证号、拍照并设置新密码');
+    return;
+  }
+
+  if (!formRef.value) return;
+
+  await formRef.value.validate(async (valid: boolean, fields: unknown) => {
+    if (!valid) {
+      console.log('表单验证失败', fields);
+      return;
+    }
+
+    loading.value = true;
+
+    try {
+      // 确保capturedPhotoBlob不为null
+      if (!capturedPhotoBlob) {
+        ElMessage.error('未获取到照片数据');
+        return;
+      }
+      
+      // 创建带有扩展名的File对象
+      const photoFile = new File([capturedPhotoBlob], 'face_image.jpg', { type: 'image/jpeg' });
+      
+      const response = await resetPasswordByFace(
+        formData.card,
+        photoFile,
+        formData.newPassword
+      );
+
+      if (response && response.success) {
+        ElMessage.success(response.message || '密码重置成功');
+        currentStep.value = 2; // 直接进入完成步骤
+      } else {
+        ElMessage.error(response?.message || '人脸验证失败');
+        resetPhoto(); // 验证失败后自动重拍
+      }
+    } catch (error) {
+      console.error('人脸验证出错', error);
+      resetPhoto(); // 验证失败后自动重拍
+    } finally {
+      loading.value = false;
+    }
+  });
+};
+
+// 提交步骤2表单 (邮箱/手机验证后的密码重置)
 const submitStep2 = async () => {
   if (!formRef.value) return;
   
@@ -259,6 +498,11 @@ const submitStep2 = async () => {
       return;
     }
     
+    if (formData.verifyType === 'face') {
+        console.warn('当前验证方式为人脸验证，跳过验证码/密码重置逻辑');
+        return;
+    }
+
     loading.value = true;
     
     try {
@@ -284,9 +528,9 @@ const submitStep2 = async () => {
   });
 };
 
-// 发送验证码
+// 发送验证码 (仅限邮箱/手机验证)
 const sendCode = async () => {
-  if (countdown.value > 0) return;
+  if (countdown.value > 0 || formData.verifyType === 'face') return;
   
   loading.value = true;
   
@@ -294,7 +538,6 @@ const sendCode = async () => {
     const response = await sendResetPasswordCode(formData.card, formData.verifyType as 'email' | 'sms');
     
     if (response && response.success) {
-      // 更新联系信息
       if (formData.verifyType === 'email' && response.data.maskedEmail) {
         contactInfo.value = response.data.maskedEmail;
       } else if (formData.verifyType === 'sms' && response.data.maskedPhone) {
@@ -303,7 +546,6 @@ const sendCode = async () => {
       
       ElMessage.success(response.message || '验证码已重新发送');
       
-      // 重新启动倒计时
       startCountdown();
     } else {
       ElMessage.error(response?.message || '发送验证码失败');
@@ -336,15 +578,43 @@ const startCountdown = () => {
   }, 1000);
 };
 
+// 返回第一步
+const resetToStep1 = () => {
+  currentStep.value = 0;
+  stopCamera();
+  resetPhoto();
+  rules.code = [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { min: 6, max: 6, message: '验证码长度为6位', trigger: 'blur' }
+  ];
+  formData.code = '';
+  formData.newPassword = '';
+  formData.confirmPassword = '';
+};
+
 // 返回登录页
 const goToLogin = () => {
   router.push('/login');
 };
 
-// 组件卸载前清除定时器
+// 监听步骤变化，如果在人脸验证步骤且离开，则关闭摄像头
+watch(currentStep, (newStep, oldStep) => {
+    if (oldStep === 1 && formData.verifyType === 'face' && newStep !== 1) {
+        stopCamera();
+        resetPhoto();
+    }
+    if (newStep === 1 && formData.verifyType === 'face' && oldStep !== 1) {
+    }
+});
+
+// 组件卸载前清除定时器和停止摄像头
 onBeforeUnmount(() => {
   if (countdownTimer) {
     clearInterval(countdownTimer);
+  }
+  stopCamera();
+  if (capturedPhotoUrl.value) {
+    URL.revokeObjectURL(capturedPhotoUrl.value);
   }
 });
 </script>
@@ -572,5 +842,36 @@ onBeforeUnmount(() => {
   font-weight: 500;
   color: #606266;
   margin-bottom: 8px;
+}
+
+/* 人脸验证样式 */
+.face-verification-step .camera-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 20px;
+  position: relative;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.face-verification-step .camera-preview,
+.face-verification-step .captured-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.face-verification-step .captured-photo {
+   object-fit: contain;
+   background-color: #000;
+}
+
+.face-verification-step .photo-canvas {
+  display: none;
 }
 </style> 

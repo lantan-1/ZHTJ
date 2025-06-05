@@ -76,8 +76,8 @@ public class PasswordResetServiceImpl implements PasswordResetService {
             throw new IllegalArgumentException("身份证号不能为空");
         }
         
-        if (!StringUtils.hasText(type) || (!type.equals("email") && !type.equals("sms"))) {
-            throw new IllegalArgumentException("验证类型必须为email或sms");
+        if (!StringUtils.hasText(type) || (!type.equals("email") && !type.equals("sms") && !type.equals("face"))) {
+            throw new IllegalArgumentException("验证类型必须为email、sms或face");
         }
         
         // 防暴力破解 - 检查IP请求频率
@@ -175,11 +175,11 @@ public class PasswordResetServiceImpl implements PasswordResetService {
             throw new IllegalArgumentException("身份证号不能为空");
         }
         
-        if (!StringUtils.hasText(type) || (!type.equals("email") && !type.equals("sms"))) {
-            throw new IllegalArgumentException("验证类型必须为email或sms");
+        if (!StringUtils.hasText(type) || (!type.equals("email") && !type.equals("sms") && !type.equals("face"))) {
+            throw new IllegalArgumentException("验证类型必须为email、sms或face");
         }
         
-        if (!StringUtils.hasText(code)) {
+        if (!"face".equals(type) && !StringUtils.hasText(code)) {
             throw new IllegalArgumentException("验证码不能为空");
         }
         
@@ -210,30 +210,26 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         }
         
         // 验证验证码
-        String redisKey = "reset_password_" + type + "_" + card;
-        Object storedCode = redisService.get(redisKey);
-        
-        if (storedCode == null) {
-            throw new IllegalArgumentException("验证码已过期或不存在");
+        if (!"face".equals(type)) {
+            String redisKey = "reset_password_" + type + "_" + card;
+            Object storedCode = redisService.get(redisKey);
+            if (storedCode == null) {
+                throw new IllegalArgumentException("验证码已过期或不存在");
+            }
+            if (!code.equals(storedCode.toString())) {
+                throw new IllegalArgumentException("验证码错误");
+            }
+            // 删除验证码
+            redisService.del(redisKey);
         }
-        
-        if (!code.equals(storedCode.toString())) {
-            throw new IllegalArgumentException("验证码错误");
-        }
-        
         // 重置密码
         User updatedUser = new User();
         updatedUser.setId(user.getId());
         updatedUser.setPwd(newPassword);
         boolean success = userService.updateUser(updatedUser);
-        
         if (!success) {
             throw new RuntimeException("密码重置失败");
         }
-        
-        // 删除验证码
-        redisService.del(redisKey);
-        
         // 发送密码重置成功通知
         try {
             sendPasswordResetNotification(user, type);
@@ -241,12 +237,9 @@ public class PasswordResetServiceImpl implements PasswordResetService {
             // 通知发送失败不影响主流程
             log.warn("发送密码重置通知失败: {}", e.getMessage());
         }
-        
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
-        
         log.info("用户{}({})重置密码成功", user.getName(), card);
-        
         return result;
     }
     
@@ -256,7 +249,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
      * @param type 通知类型(email或sms)
      */
     private void sendPasswordResetNotification(User user, String type) {
-        if ("email".equals(type) && StringUtils.hasText(user.getEmail())) {
+        if (("email".equals(type) || "face".equals(type)) && StringUtils.hasText(user.getEmail())) {
             String emailContent = "尊敬的用户：您好！\n\n"
                     + "您的智慧团建系统密码已成功重置。\n\n"
                     + "如非本人操作，请立即联系管理员。\n\n"

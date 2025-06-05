@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -28,7 +27,6 @@ public class User {
     
     private String card;                    // 身份证号
     
-    @JsonIgnore
     private String pwd;                     // 密码(加密存储)
     
     private String gender;                  // 性别(男/女)
@@ -96,11 +94,24 @@ public class User {
      */
     private Boolean isActivated;
 
+    /**
+     * 人脸图片路径
+     */
+    private String faceImagePath;
+
     public Boolean getIsActivated() {
         return isActivated;
     }
 
     public void setIsActivated(Boolean isActivated) {
         this.isActivated = isActivated;
+    }
+
+    public String getFaceImagePath() {
+        return faceImagePath;
+    }
+
+    public void setFaceImagePath(String faceImagePath) {
+        this.faceImagePath = faceImagePath;
     }
 } 

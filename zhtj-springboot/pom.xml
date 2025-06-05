@@ -212,6 +212,14 @@
             <artifactId>commons-io</artifactId>
             <version>2.15.1</version>
         </dependency>
+
+        <!-- 阿里云人脸识别SDK -->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>facebody20191230</artifactId>
+            <version>3.0.7</version>
+        </dependency>
+
     </dependencies>
 
     <build>
