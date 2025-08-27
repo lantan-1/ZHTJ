@@ -101,7 +101,7 @@ spring:
     host: smtp.163.com
     port: 465
     username: lantank2024@163.com
-    password: PJWNpShgy4GXCLQm #授权密码，非邮箱密码，授权码是用于登录第三方邮件客户端的专用密码。
+    password: xxx #授权密码，非邮箱密码，授权码是用于登录第三方邮件客户端的专用密码。
     test-connection: false # 启动时不测试连接
     properties:
       mail:
@@ -139,8 +139,8 @@ jwt:
 aliyun:
   sms:
     enabled: true  # 启用阿里云短信服务
-    access-key-id: "LTAI5tNBWGoscwTZKVQrGTdn"  # 请替换为实际AccessKey ID
-    access-key-secret: "McnbJ3zIdxwmULh6vu2QDipqaWsOyD"  # 请替换为实际AccessKey Secret
+    access-key-id: "xxx"  # 请替换为实际AccessKey ID
+    access-key-secret: "xxx"  # 请替换为实际AccessKey Secret
     sign-name: 蓝探  # 短信签名
     template-code:
       verification: SMS_465656030  # 验证码短信模板ID
